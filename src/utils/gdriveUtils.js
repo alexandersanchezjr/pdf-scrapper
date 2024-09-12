@@ -93,29 +93,51 @@ async function getAccessToken(oAuth2Client) {
 }
 
 /**
- * Create a folder in Google Drive.
+ * Create a folder recursively in Google Drive.
  * @param {google.drive_v3.Drive} drive - Google Drive API client.
  * @param {string} parentFolderId - Parent folder ID in Google Drive.
- * @param {string} folderName - Name of the folder to create.
- * @returns {Promise<string>} - The ID of the created folder.
+ * @param {string} folderPath - Path of the folders to create, separated by '/'.
+ * @returns {Promise<string>} - The ID of the deepest folder created or found.
  */
-async function createFolder(drive, parentFolderId, folderName) {
-    try {
-        const fileMetadata = {
-            name: folderName,
-            parents: [parentFolderId],
-            mimeType: 'application/vnd.google-apps.folder',
-        };
-        const file = await drive.files.create({
-            resource: fileMetadata,
-            fields: 'id',
-        });
-        logger.info(`Created folder '${folderName}' in Google Drive.`);
-        return file.data.id;
-    } catch (e) {
-        logger.error(`Failed to create folder '${folderName}': ${e}`);
-        throw e;
+async function createFolder(drive, parentFolderId, folderPath) {
+    const folders = folderPath.split('/'); // Split the path into individual folder names
+    let currentParentId = parentFolderId;
+
+    for (const folderName of folders) {
+        try {
+            // Check if folder already exists
+            const searchResponse = await drive.files.list({
+                q: `name='${folderName}' and '${currentParentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+                fields: 'files(id, name)',
+                spaces: 'drive',
+            });
+
+            if (searchResponse.data.files.length > 0) {
+                // Folder exists, use the existing folder ID
+                const existingFolderId = searchResponse.data.files[0].id;
+                logger.info(`Folder '${folderName}' already exists in Google Drive. Using existing folder ID.`);
+                currentParentId = existingFolderId; // Move to the next parent (child becomes parent)
+            } else {
+                // Folder does not exist, create it
+                const fileMetadata = {
+                    name: folderName,
+                    parents: [currentParentId],
+                    mimeType: 'application/vnd.google-apps.folder',
+                };
+                const file = await drive.files.create({
+                    resource: fileMetadata,
+                    fields: 'id',
+                });
+                logger.info(`Created folder '${folderName}' in Google Drive.`);
+                currentParentId = file.data.id; // Move to the newly created folder as the new parent
+            }
+        } catch (e) {
+            logger.error(`Failed to create or find folder '${folderName}': ${e}`);
+            throw e;
+        }
     }
+
+    return currentParentId; // Return the ID of the deepest folder created or found
 }
 
 /**
