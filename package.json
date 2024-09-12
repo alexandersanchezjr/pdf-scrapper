@@ -1,7 +1,10 @@
 {
   "dependencies": {
+    "express": "^4.21.0",
     "googleapis": "^142.0.0",
     "minimist": "^1.2.8",
-    "puppeteer": "^23.1.0"
+    "open": "^10.1.0",
+    "puppeteer": "^23.1.0",
+    "winston": "^3.14.2"
   }
 }
