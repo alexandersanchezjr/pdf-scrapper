@@ -36,15 +36,20 @@ The script expects two configuration files for Google Drive and Puppeteer settin
 
 ## Parameters
 
-The script accepts several parameters for generating reports:
+The script accepts several parameters for generating reports. These parameters can be provided either in their full form or using aliases:
 
-- **email** (required): The email to log in to the website.
-- **password** (required): The password to log in to the website.
-- **year** (required): The year to generate reports from.
-- **month-start** (optional): The starting month (e.g., `01` for January). If this parameter is provided, the script will generate reports starting from this month.
-- **month-end** (optional): The ending month (e.g., `12` for December). If provided along with `month-start`, the script will generate reports for the entire range.
-- **form-type** (optional): The form type number to specify which reports to generate. If not passed, the script will generate all form types.
-- **parent-folder-id** (required): The Google Drive folder ID where the reports will be uploaded.
+- **email** (alias: `-e`, required): The email to log in to the website.
+- **password** (alias: `-p`, required): The password to log in to the website.
+- **year** (alias: `-y`, required): The year for which to generate reports. Defaults to the current year if not provided.
+- **month-start** (alias: `-s`, optional): The starting month (e.g., `01` for January). If this parameter is provided, the script will generate reports starting from this month. Defaults to January.
+- **month-end** (alias: `-e`, optional): The ending month (e.g., `12` for December). If provided along with `month-start`, the script will generate reports for the entire range. Defaults to December.
+- **form-type** (alias: `-f`, optional): The form type number to specify which reports to generate. If not passed, the script will generate all form types.
+- **parent-folder-id** (alias: `-id`, required): The Google Drive folder ID where the reports will be uploaded.
+
+### Notes:
+- If no `form-type` is passed, the script will generate reports for all form types.
+- The script will validate that the `start-month` is not greater than the `end-month`. If they are invalid, an error message will be displayed.
+- The script will use the current year by default if no year is provided.
 
 ### Association Map
 
@@ -125,30 +130,52 @@ Now, you can use this folder ID when passing the `--parent-folder-id` parameter 
 
 ### Example Usage
 
-Here are some example commands to run the script:
-
 1. **Generate reports for all form types in a specific year (e.g., 2024):**
 
+    Using full form:
     ```bash
     node index.js --email "your-email@example.com" --password "your-password" --year 2024 --parent-folder-id "your-google-drive-folder-id"
     ```
 
+    Using aliases:
+    ```bash
+    node index.js -e "your-email@example.com" -p "your-password" -y 2024 -id "your-google-drive-folder-id"
+    ```
+
 2. **Generate reports for a specific form type (e.g., form type 5):**
 
+    Using full form:
     ```bash
     node index.js --email "your-email@example.com" --password "your-password" --year 2024 --form-type 5 --parent-folder-id "your-google-drive-folder-id"
     ```
 
+    Using aliases:
+    ```bash
+    node index.js -e "your-email@example.com" -p "your-password" -y 2024 -f 5 -id "your-google-drive-folder-id"
+    ```
+
 3. **Generate reports for a specific month (e.g., March 2024):**
 
+    Using full form:
     ```bash
     node index.js --email "your-email@example.com" --password "your-password" --year 2024 --month-start 03 --parent-folder-id "your-google-drive-folder-id"
     ```
 
+    Using aliases:
+    ```bash
+    node index.js -e "your-email@example.com" -p "your-password" -y 2024 -s 03 -id "your-google-drive-folder-id"
+    ```
+
 4. **Generate reports for a range of months (e.g., from March 2024 to July 2024):**
 
+    Using full form:
     ```bash
     node index.js --email "your-email@example.com" --password "your-password" --year 2024 --month-start 03 --month-end 07 --parent-folder-id "your-google-drive-folder-id"
+    ```
+
+    Using aliases:
+    ```bash
+    node index.js -e "your-email@example.com" -p "your-password" -y 2024 -s 03 -e 07 -id "your-google-drive-folder-id"
     ```
 
 ### Directory Structure for Reports
