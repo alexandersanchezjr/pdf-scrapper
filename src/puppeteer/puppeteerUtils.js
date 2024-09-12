@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const logger = require('../utils/logger');
 
 /**
  * Launch Puppeteer browser instance.
@@ -16,7 +17,7 @@ async function launchBrowser() {
 async function savePageAsPdf(page, pdfPath) {
     page.waitForSelector('#print-button');
     await page.pdf({ path: pdfPath, format: 'Letter' });
-    console.log(`Saved PDF to '${pdfPath}'.`);
+    logger.info(`Saved PDF to '${pdfPath}'.`);
 }
 
 module.exports = { launchBrowser, savePageAsPdf };
