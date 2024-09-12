@@ -81,15 +81,21 @@ async function main(email, password, year, startMonth, endMonth, formType, paren
                         await page.goto(surveyUrl);
                         logger.info(`Navigated to survey URL: ${surveyUrl}`);
 
+                        const folderPath = `${year.toString()}/${spanishMonth}/${formName}/${associationName}`;
+                        var filename = await page.title();
+                        logger.info(`Original Title: ${filename}`);
+                        filename = filename.replace(/\//g, '_');
+                        logger.info(`Modified Title: ${filename}`);
+
                         // Define the PDF file path
-                        const pdfPath = path.join(__dirname, 'pdfs', associationName, `${formName}-${spanishMonth}-${year}.pdf`);
+                        const pdfPath = path.join(__dirname, 'pdfs', folderPath, `${filename}.pdf`);
                         existsFolder(pdfPath);
 
                         // Save the PDF
                         await savePageAsPdf(page, pdfPath);
 
                         // Upload PDF to Google Drive
-                        const folderId = await createFolder(drive, parentFolderId, associationName);
+                        const folderId = await createFolder(drive, parentFolderId, folderPath);
                         await savePdfToDrive(drive, pdfPath, folderId);
                     }
                 }
@@ -104,15 +110,63 @@ async function main(email, password, year, startMonth, endMonth, formType, paren
     }
 }
 
-// Command line argument parsing
-const args = minimist(process.argv.slice(2));
-const { email, password, year, startMonth, endMonth, formType, parentFolderId } = args;
+// Parse command-line arguments using minimist with default values and aliases
+const args = minimist(process.argv.slice(2), {
+    alias: {
+        e: 'email',
+        p: 'password',
+        f: 'form-type',
+        y: 'year',
+        s: 'month-start',
+        m: 'month-end',
+        i: 'parent-folder-id'
+    },
+    default: {
+        'form-type': null,  // If no form type is passed, generate for all types
+        'year': new Date().getFullYear(),  // Default to the current year
+        'month-start': 1,  // Default start month is January
+        'month-end': 12  // Default end month is December
+    }
+});
 
-// Validate required parameters
-if (!email || !password || !year) {
-    logger.error("Required parameters: --email, --password, --year");
-    process.exit(1);
+// Normalize arguments and validate them
+function normalizeArguments(args) {
+    logger.info(`Received arguments: ${JSON.stringify(args)}`);
+
+    const email = args.email;
+    const password = args.password;
+    const formType = args['form-type'];
+    const year = parseInt(args.year);
+    const startMonth = parseInt(args['month-start']);
+    const endMonth = parseInt(args['month-end']);
+    const parentFolderId = args['parent-folder-id'];
+
+    if (!email || !password) {
+        logger.error("Email and password are required.");
+        process.exit(1);
+    }
+
+    if (startMonth > endMonth) {
+        logger.error("Start month cannot be greater than end month.");
+        process.exit(1);
+    }
+
+    logger.info(`Running script with the following parameters:
+    \t\t\t\tEmail: ${email}
+    \t\t\t\tPassword: [HIDDEN]
+    \t\t\t\tForm Type: ${formType}
+    \t\t\t\tYear: ${year}
+    \t\t\t\tStart Month: ${startMonth}
+    \t\t\t\tEnd Month: ${endMonth}
+    \t\t\t\tParent Folder ID: ${parentFolderId || 'None provided'}`);
+    
+    return { email, password, formType, year, startMonth, endMonth, parentFolderId };
 }
 
+// Extract and normalize arguments
+const { email, password, formType, year, startMonth, endMonth, parentFolderId } = normalizeArguments(args);
+
 // Execute main function
-main(email, password, year, startMonth, endMonth, formType, parentFolderId);
+main(email, password, year, startMonth, endMonth, formType, parentFolderId)
+    .then(() => logger.info("Script execution finished successfully."))
+    .catch(error => logger.error(`Script failed with error: ${error.message}`));
