@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 /**
  * Convert month number to Spanish name.
  * @param {number} monthNumber - The month number (1-12).
@@ -19,6 +21,7 @@ function getSpanishMonth(monthNumber) {
  */
 function generateMonths(startMonth, endMonth) {
     const months = [];
+    logger.info(`Generating months from ${startMonth} to ${endMonth}.`);
     if (!startMonth && !endMonth) {
         for (let i = 1; i <= 12; i++) {
             months.push(i);
