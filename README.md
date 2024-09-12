@@ -1,8 +1,4 @@
-Here is an updated version of the `README.md` that includes the **association map**:
-
----
-
-# Puppeteer + Google Drive Integration Script
+# Reports Generator
 
 This script automates the process of downloading reports in PDF format from a website using Puppeteer and uploading the downloaded reports to Google Drive using the Google Drive API. The reports are categorized by form type, association, and date (month/year). The script also supports generating reports for a specific month or a date range and uploading them into structured directories in Google Drive.
 
@@ -99,6 +95,34 @@ When using the `form-type` parameter, the script supports the following form typ
 | 15          | AT SOSTENIMIENTO - PARCELA INNOVADORA CORPOVALLE |
 | 16          | AT SOSTENIMIENTO - CASA MALLA TIPO ESPACIAL    |
 
+### Google Drive Folder ID
+
+To get the **Google Drive Folder ID**, follow these steps:
+
+1. **Navigate to Google Drive**:
+   - Open your browser and go to [Google Drive](https://drive.google.com/).
+
+2. **Find the Folder**:
+   - Locate the folder for which you want the ID.
+
+3. **Open the Folder**:
+   - Click on the folder to open it.
+
+4. **Get the Folder ID from the URL**:
+   - Look at the URL in your browser's address bar. It will look something like this:
+     ```
+     https://drive.google.com/drive/u/0/folders/1X0yjh2sfDsdfvSejkOiswtrg3
+     ```
+   - The **Folder ID** is the part after `folders/`. In the above example, the folder ID is:
+     ```
+     1X0yjh2sfDsdfvSejkOiswtrg3
+     ```
+
+5. **Copy the Folder ID**:
+   - Highlight the folder ID from the URL and copy it.
+
+Now, you can use this folder ID when passing the `--parent-folder-id` parameter in the script.
+
 ### Example Usage
 
 Here are some example commands to run the script:
@@ -175,5 +199,3 @@ The script uses a logging service (like `winston` or `log4js`) to output log mes
 This project is licensed under the MIT License.
 
 ---
-
-This `README.md` now includes the **association map** for reference. You can further customize it based on your project's requirements.
