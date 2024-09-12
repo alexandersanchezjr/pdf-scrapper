@@ -1,36 +1,18 @@
-/**
- * Convert month number to Spanish name.
- * @param {number} monthNumber - The month number (1-12).
- * @returns {string} - The Spanish name of the month.
- */
-function getSpanishMonth(monthNumber) {
-    const months = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
-        'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    return months[monthNumber - 1];
-}
+const fs = require('fs');
+const path = require('path');
+const logger = require('./logger');
 
 /**
- * Generate an array of months based on provided parameters.
- * @param {number} startMonth - The starting month (1-12).
- * @param {number} endMonth - The ending month (1-12).
- * @returns {number[]} - An array of months.
+ * Ensure that a directory exists; create it if it does not.
+ * @param {string} filePath - The file path to ensure directory for.
  */
-function generateMonths(startMonth, endMonth) {
-    const months = [];
-    if (!startMonth && !endMonth) {
-        for (let i = 1; i <= 12; i++) {
-            months.push(i);
-        }
-    } else if (startMonth && endMonth) {
-        for (let i = startMonth; i <= endMonth; i++) {
-            months.push(i);
-        }
-    } else {
-        months.push(startMonth);
+function existsFolder(filePath) {
+    const dirname = path.dirname(filePath);
+    if (!fs.existsSync(dirname)) {
+        fs.mkdirSync(dirname, { recursive: true });
+        logger.info(`Created directory: ${dirname}`);
     }
-    return months;
+    logger.info(`Directory exists: ${dirname}`);
 }
 
-module.exports = { getSpanishMonth, generateMonths };
+module.exports = { existsFolder };
