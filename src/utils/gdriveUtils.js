@@ -23,7 +23,7 @@ async function setupGoogleDrive() {
         } else {
             await getAccessToken(oAuth2Client);
         }
-        return google.drive({ version: 'v3', auth: oAuth2Client });
+        return google.drive({ version: 'v3', auth: oAuth2Client, timeout: 60000 });
     } catch (e) {
         logger.error(`Failed to authenticate with Google Drive: ${e}`);
         throw e;
@@ -56,39 +56,48 @@ async function getAccessToken(oAuth2Client) {
     const port = 3000;
 
     // Handle the OAuth2 callback when the user grants access.
-    app.get('/', (req, res) => {
-        const code = req.query.code; // Extract the authorization code from the URL query parameters.
-
-        // If the code is not provided, return an error message to the user.
-        if (!code) {
-            res.send('Authorization failed. No code provided.');
-            return;
-        }
-
-        // Exchange the authorization code for an access token.
-        oAuth2Client.getToken(code, async (err, token) => {
-            if (err) return console.error('Error retrieving access token', err);
-
-            // Set the retrieved access token for the OAuth2 client.
-            oAuth2Client.setCredentials(token);
-
-            // Store the token in a local file (token.json) for future authentication.
-            fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
-            logger.info('Token stored to ' + TOKEN_PATH);
-
-            // Inform the user that the authorization was successful.
-            res.send('Authorization successful! You can now close this tab.');
-
-            // Close the Express server after token is saved and authorization is successful.
-            server.close(() => {
-                logger.info('Authorization process complete. Server closed.');
+    return new Promise((resolve, reject) => {
+        app.get('/', (req, res) => {
+            const code = req.query.code; // Extract the authorization code from the URL query parameters.
+    
+            // If the code is not provided, return an error message to the user.
+            if (!code) {
+                res.send('Authorization failed. No code provided.');
+                reject(new Error('No code provided in the callback.'));
+                return;
+            }
+    
+            // Exchange the authorization code for an access token.
+            oAuth2Client.getToken(code, async (err, token) => {
+                if (err) {
+                    logger.error('Error retrieving access token', err);
+                    res.send('Authorization failed. Error retrieving token.')
+                    reject(err);
+                    return;
+                }
+    
+                // Set the retrieved access token for the OAuth2 client.
+                oAuth2Client.setCredentials(token);
+    
+                // Store the token in a local file (token.json) for future authentication.
+                fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
+                logger.info('Token stored to ' + TOKEN_PATH);
+    
+                // Inform the user that the authorization was successful.
+                res.send('Authorization successful! You can now close this tab.');
+    
+                // Close the Express server after token is saved and authorization is successful.
+                server.close(() => {
+                    logger.info('Authorization process complete. Server closed.');
+                    resolve();
+                });
             });
         });
-    });
-
-    // Start the Express server to listen for OAuth2 callbacks on port 3000.
-    const server = app.listen(port, () => {
-        console.log(`Listening on port ${port}. Waiting for authorization callback...`);
+    
+        // Start the Express server to listen for OAuth2 callbacks on port 3000.
+        const server = app.listen(port, () => {
+            console.log(`Listening on port ${port}. Waiting for authorization callback...`);
+        }); 
     });
 }
 

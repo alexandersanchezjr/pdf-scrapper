@@ -20,6 +20,7 @@ async function main(email, password, year, startMonth, endMonth, formType, paren
         // Launch Puppeteer browser
         browser = await launchBrowser();
         const page = await browser.newPage();
+        await page.setDefaultNavigationTimeout(60000); 
         logger.info("Initialized Puppeteer.");
 
         // Login to the website
@@ -55,7 +56,12 @@ async function main(email, password, year, startMonth, endMonth, formType, paren
 
                     // Navigate to the route containing the association ID, form type, and month-year
                     const reportUrl = `${baseUrl}/report-pdf/${associationId}/${form}/${month}-${year}`;
-                    await page.goto(reportUrl);
+                    try {
+                        await page.goto(reportUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+                    } catch (error) {
+                        logger.error(`An error occurred while navigating to report URL: ${reportUrl}. Retrying...`);
+                        await page.goto(reportUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+                    }
                     logger.info(`Navigated to report URL: ${reportUrl}`);
 
                     const tdElements = await page.$$('td');
@@ -78,7 +84,12 @@ async function main(email, password, year, startMonth, endMonth, formType, paren
 
                     for (const idValue of idValues) {
                         const surveyUrl = `${baseUrl}/survey-pdf/${idValue}`;
-                        await page.goto(surveyUrl);
+                        try {
+                            await page.goto(surveyUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+                        } catch (error) {
+                            logger.error(`The error ${error} occurred while navigating to survey URL: ${surveyUrl}. Retrying...`);
+                            await page.goto(surveyUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+                        }
                         logger.info(`Navigated to survey URL: ${surveyUrl}`);
 
                         const folderPath = `${year.toString()}/${spanishMonth}/${formName}/${associationName}`;
